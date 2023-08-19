@@ -10,13 +10,9 @@ it will start from scratch.
    1. Wheather: https://openweathermap.org/api
 - Icon: 
    1.  Wheather: https://openweathermap.org/weather-conditions
-        https://openweathermap.org/img/wn/<icon-id>@2x.png
+        https://openweathermap.org/img/wn/<icon-id>@4x.png
 - Json serializa
    1. https://flutter.cn/docs/development/data-and-backend/json
    2. https://pub.dev/packages/json_serializable
 
 
-## structure
-api-> model ->
-repository~=filter -> 
-local model -> bloc state

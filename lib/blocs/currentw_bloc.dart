@@ -20,6 +20,8 @@ final class FectchByLocation extends CurrentEvent {
   FectchByLocation(this.lat, this.lng);
 }
 
+final class RefreshCurrent extends CurrentEvent {}
+
 class CurrentWeatherBloc extends HydratedBloc<CurrentEvent, WeatherState> {
   CurrentWeatherBloc() : super(WeatherState()) {
     on<FectchByName>((event, emit) async {
@@ -66,6 +68,56 @@ class CurrentWeatherBloc extends HydratedBloc<CurrentEvent, WeatherState> {
       } catch (e) {
         print(e);
         emit(state.copyWith(status: WeatherStatus.failure));
+      }
+    });
+    on<RefreshCurrent>((event, emit) async {
+      emit(state.copyWith(status: WeatherStatus.loading));
+
+      //check if history is not null, use history.lat/lng to query weather
+      if (state.lat != 0.0 && state.lng != 0.0) {
+        try {
+          WeatherResponse response = await OpenWeatherMapApiClient()
+              .getWeather(latitude: state.lat, longitude: state.lng);
+          emit(state.copyWith(
+            status: WeatherStatus.success,
+            temperature: response.main?.temp,
+            description: response.weather?.first.description ?? '',
+            city: response.name ?? '',
+            country: response.sys?.country ?? '',
+            lat: response.coord?.lat ?? 0.0,
+            lng: response.coord?.lon ?? 0.0,
+            icon: response.weather?.first.icon ?? '',
+            humidity: response.main?.humidity ?? 0,
+            updateat: DateTime.now().millisecondsSinceEpoch,
+          ));
+        } catch (e) {
+          print(e);
+          emit(state.copyWith(status: WeatherStatus.failure));
+        }
+      } else if (state.city != '') {
+        try {
+          WeatherResponse response =
+              await OpenWeatherMapApiClient().getWeather(query: state.city);
+          //TODO: convert response model to local state:
+          //TODO: update state & emit it
+          emit(state.copyWith(
+            status: WeatherStatus.success,
+            temperature: response.main?.temp,
+            description: response.weather?.first.description ?? '',
+            city: response.name ?? '',
+            country: response.sys?.country ?? '',
+            lat: response.coord?.lat ?? 0.0,
+            lng: response.coord?.lon ?? 0.0,
+            icon: response.weather?.first.icon ?? '',
+            humidity: response.main?.humidity ?? 0,
+            updateat: DateTime.now().millisecondsSinceEpoch,
+          ));
+        } catch (e) {
+          print(e);
+          emit(state.copyWith(status: WeatherStatus.failure));
+        }
+      } else {
+        emit(state.copyWith(status: WeatherStatus.initial));
       }
     });
   }
